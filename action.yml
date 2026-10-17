@@ -1,0 +1,33 @@
+name: 'SDK-Fabric Python Publish'
+description: 'SDK-Fabric GitHub action to publish a Python release'
+branding:
+  icon: 'upload'
+  color: 'green'
+inputs:
+  typehub_version:
+    description: 'The provided TypeHub version'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.x"
+    - name: Set version
+      shell: bash
+      run: |
+        if [ -f "./pyproject.toml" ]; then
+          sed -i "s/0.1.0/${{ inputs.typehub_version }}/g" ./pyproject.toml
+        elif [ -f "./setup.py" ]; then
+          sed -i "s/0.1.0/${{ inputs.typehub_version }}/g" ./setup.py
+        fi
+    - name: Install build tool
+      shell: bash
+      run: python3 -m pip install --upgrade build
+    - name: Build a binary wheel and a source tarball
+      shell: bash
+      run: python3 -m build
+    - name: Publish distribution to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
